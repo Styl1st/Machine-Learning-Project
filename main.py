@@ -1,5 +1,4 @@
 import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import LabelEncoder
 
@@ -30,6 +29,9 @@ for col in categorical_cols:
 train_df = full_df[full_df["__is_train__"] == 1].drop(columns="__is_train__")
 test_df = full_df[full_df["__is_train__"] == 0].drop(columns="__is_train__")
 
+print(train_df)
+print(test_df)
+
 
 # KNN Classifier 
 X_train = train_df.drop(columns=["Addiction_Class"])
@@ -49,13 +51,15 @@ results_df_KNN = pd.DataFrame({
     "Recall": [recall_score(y_test, y_pred, average='weighted')],
     "F1": [f1_score(y_test, y_pred, average='weighted')]
 })
-
 results_df_KNN.index = ["KNeighborsClassifier"]
 
 print(results_df_KNN)
 
+
 # Correlation Analysis
 corr_matrix = train_df.corr()
+
+import seaborn as sns
 
 plt.figure(figsize=(12,10))
 sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap="coolwarm")
