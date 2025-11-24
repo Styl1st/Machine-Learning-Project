@@ -5,9 +5,16 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.preprocessing import LabelEncoder
+import os 
 
-test_df = pd.read_csv('Students drugs Addiction Dataset/Student_Drugs_Addiction_Testing_ Dataset/student_addiction_dataset_test.csv')
-train_df = pd.read_csv('Students drugs Addiction Dataset/Student_Drugs_Addiction_Training_ Dataset/student_addiction_dataset_train.csv')
+train_df = pd.read_csv(
+   os.path.join(os.getcwd(), "Students drugs Addiction Dataset", "Student_Drugs_Addiction_Training_ Dataset", "student_addiction_dataset_train.csv")
+)
+
+test_df = pd.read_csv(
+   os.path.join(os.getcwd(), "Students drugs Addiction Dataset", "Student_Drugs_Addiction_Training_ Dataset", "student_addiction_dataset_train.csv")
+)
+
 
 # Data Preprocessing
 train_df = train_df.dropna()
