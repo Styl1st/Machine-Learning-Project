@@ -32,6 +32,25 @@ test_df = full_df[full_df["__is_train__"] == 0].drop(columns="__is_train__")
 print(train_df)
 print(test_df)
 
+# Chi-2 (X²) Feature Selection
+from scipy.stats import chi2_contingency
+
+target_col = "Addiction_Class"
+
+# Run Chi-2 test for each feature against the target
+chi2_results = []
+
+for col in train_df.columns:
+    if col == target_col:
+        continue
+    contingency_table = pd.crosstab(train_df[col], train_df[target_col])
+    chi2, p, dof, expected = chi2_contingency(contingency_table)
+    chi2_results.append([col, chi2, p])
+
+chi2_df = pd.DataFrame(chi2_results, columns=["Feature", "Chi2", "p-value"])
+chi2_df = chi2_df.sort_values(by="Chi2", ascending=False)
+print(chi2_df)
+print("\n")
 
 # KNN Classifier 
 X_train = train_df.drop(columns=["Addiction_Class"])
