@@ -23,25 +23,7 @@ print("\n===== Summary Statistics (numerical only) =====")
 print(df.describe())
 
 # =============================================
-# 2. EDA - Visualizations
-# =============================================
-
-# Count plot of 'Domain'
-plt.figure(figsize=(10,6))
-sns.countplot(data=df, x="Domain")
-plt.xticks(rotation=45)
-plt.title("Count of Survey Entries per Domain")
-plt.show()
-
-# Distribution of 'Value'
-plt.figure(figsize=(10,6))
-sns.histplot(df["Value"], kde=True, bins=20)
-plt.title("Distribution of 'Value'")
-plt.xlabel("Value (%)")
-plt.show()
-
-# =============================================
-# 3. PREPROCESSING
+# 2. PREPROCESSING
 # =============================================
 
 # Drop rows with missing 'Value' because it is numeric and essential
@@ -110,16 +92,6 @@ print("Silhouette Score:", kmeans_silhouette)
 pca = PCA(n_components=2)
 reduced = pca.fit_transform(df_processed)
 
-plt.figure(figsize=(8,6))
-sns.scatterplot(
-    x=reduced[:,0],
-    y=reduced[:,1],
-    hue=kmeans_labels,
-    palette="tab10"
-)
-plt.title("K-Means Clusters (PCA Projection)")
-plt.show()
-
 # =============================================
 # Agglomerative Clustering
 # =============================================
@@ -132,16 +104,6 @@ agg_labels = agg.fit_predict(df_processed)
 agg_silhouette = silhouette_score(df_processed, agg_labels)
 
 print("Silhouette Score:", agg_silhouette)
-
-plt.figure(figsize=(8,6))
-sns.scatterplot(
-    x=reduced[:,0],
-    y=reduced[:,1],
-    hue=agg_labels,
-    palette="tab10"
-)
-plt.title("Agglomerative Clusters (PCA Projection)")
-plt.show()
 
 # =============================================
 # DBSCAN Clustering
@@ -163,12 +125,65 @@ if unique_labels > 1:
 else:
     print("Silhouette Score: Not applicable (DBSCAN found too few clusters)")
 
+# =============================================
+# Generate a clean result table
+# ===========================================
+
+import pandas as pd
+
+# Build results table
+results_table = pd.DataFrame({
+    "Model": ["K-Means", "Agglomerative", "DBSCAN"],
+    "Silhouette Score": [
+        kmeans_silhouette,
+        agg_silhouette,
+        "N/A" if unique_labels <= 1 else dbscan_silhouette
+    ],
+    "Inertia (Only for K-Means)": [
+        kmeans_inertia,
+        "N/A",
+        "N/A"
+    ],
+    "Clusters Found": [
+        len(set(kmeans_labels)),
+        len(set(agg_labels)),
+        unique_labels
+    ]
+})
+
+print("\n===== Combined Results Table =====")
+print(results_table)
+
+# =============================================
+# ALL GRAPHS SECTION — Display at the end
+# =============================================
+
+print("\nShowing all cluster visualizations...\n")
+
+# K-Means plot
 plt.figure(figsize=(8,6))
 sns.scatterplot(
-    x=reduced[:,0],
-    y=reduced[:,1],
-    hue=dbscan_labels,
-    palette="tab10"
+    x=reduced[:,0], y=reduced[:,1],
+    hue=kmeans_labels, palette="tab10"
+)
+plt.title("K-Means Clusters (PCA Projection)")
+plt.show()
+
+# Agglomerative plot
+plt.figure(figsize=(8,6))
+sns.scatterplot(
+    x=reduced[:,0], y=reduced[:,1],
+    hue=agg_labels, palette="tab10"
+)
+plt.title("Agglomerative Clusters (PCA Projection)")
+plt.show()
+
+# DBSCAN plot
+plt.figure(figsize=(8,6))
+sns.scatterplot(
+    x=reduced[:,0], y=reduced[:,1],
+    hue=dbscan_labels, palette="tab10"
 )
 plt.title("DBSCAN Clusters (PCA Projection)")
 plt.show()
+
