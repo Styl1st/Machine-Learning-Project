@@ -1,86 +1,25 @@
 import pandas as pd
+import os
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler
 
-# =============================================
-# 1. LOAD DATA
-# =============================================
-df = pd.read_csv("combined_survey_data.csv")
-
-print("\n===== First rows of the dataset =====")
-print(df.head())
-
-print("\n===== Dataset Info =====")
-print(df.info())
-
-print("\n===== Missing Values =====")
-print(df.isnull().sum())
-
-print("\n===== Summary Statistics (numerical only) =====")
-print(df.describe())
-
-# =============================================
-# 2. PREPROCESSING
-# =============================================
-
-# Drop rows with missing 'Value' because it is numeric and essential
-df = df.dropna(subset=["Value"])
-
-# Drop rows with missing 'Value' because it is numeric and essential
-# CLEAN THE "Value" COLUMN
-df["Value"] = df["Value"].replace("***", pd.NA)
-df["Value"] = pd.to_numeric(df["Value"], errors="coerce")
-df = df.dropna(subset=["Value"])
-
-print("\n===== Summary Statistics for 'Value' =====")
-
-mean_value = df["Value"].mean()
-median_value = df["Value"].median()
-std_value = df["Value"].std()
-
-print(f"Mean: {mean_value:.2f}")
-print(f"Median: {median_value:.2f}")
-print(f"Standard Deviation: {std_value:.2f}")
-
-# Identify categorical & numerical columns
-categorical_cols = ["Group", "Education Level", "Year", "Domain", "Indicator"]
-numeric_cols = ["Value"]
-
-# One-hot encoding for categoricals
-ohe = OneHotEncoder(handle_unknown="ignore")
-
-# Standard scaler for numeric values
-scaler = StandardScaler()
-
-preprocessor = ColumnTransformer(
-    transformers=[
-        ("cat", ohe, categorical_cols),
-        ("num", scaler, numeric_cols)
-    ]
-)
-
-df_processed = preprocessor.fit_transform(df)
-
-print("\n===== Shape after preprocessing =====")
-print(df_processed.shape)
-
-# =============================================
-# Save processed dataset (optional)
-# =============================================
-import numpy as np
-df_processed = pd.DataFrame(
-    df_processed.toarray() if hasattr(df_processed, "toarray") else df_processed
-)
-df_processed.to_csv("processed_dataset.csv", index=False)
-
-print("\nProcessed dataset saved as 'processed_dataset.csv'")
+# === Load processed dataset if available, otherwise preprocess ===
+base_dir = os.path.dirname(__file__)
+processed_path = os.path.join(base_dir, 'processed_dataset.csv')
+if os.path.exists(processed_path):
+    # Load preprocessed numeric CSV directly
+    df_processed = pd.read_csv(processed_path)
 
 from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN
 from sklearn.metrics import silhouette_score
 from sklearn.decomposition import PCA
+import matplotlib
+# Use a non-interactive backend to avoid GUI-related errors (e.g. gi.require_version)
+# This is safe for scripts that only save or show plots in non-GUI environments.
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 
