@@ -35,6 +35,16 @@ df["Value"] = df["Value"].replace("***", pd.NA)
 df["Value"] = pd.to_numeric(df["Value"], errors="coerce")
 df = df.dropna(subset=["Value"])
 
+print("\n===== Summary Statistics for 'Value' =====")
+
+mean_value = df["Value"].mean()
+median_value = df["Value"].median()
+std_value = df["Value"].std()
+
+print(f"Mean: {mean_value:.2f}")
+print(f"Median: {median_value:.2f}")
+print(f"Standard Deviation: {std_value:.2f}")
+
 # Identify categorical & numerical columns
 categorical_cols = ["Group", "Education Level", "Year", "Domain", "Indicator"]
 numeric_cols = ["Value"]
@@ -186,4 +196,3 @@ sns.scatterplot(
 )
 plt.title("DBSCAN Clusters (PCA Projection)")
 plt.show()
-
