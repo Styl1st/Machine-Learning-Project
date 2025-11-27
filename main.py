@@ -1,93 +1,174 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import LabelEncoder
+import seaborn as sns
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler
 
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from sklearn.preprocessing import LabelEncoder
-import os 
+# =============================================
+# 1. LOAD DATA
+# =============================================
+df = pd.read_csv("combined_survey_data.csv")
 
-train_df = pd.read_csv(
-   os.path.join(os.getcwd(), "Students drugs Addiction Dataset", "Student_Drugs_Addiction_Training_ Dataset", "student_addiction_dataset_train.csv")
+print("\n===== First rows of the dataset =====")
+print(df.head())
+
+print("\n===== Dataset Info =====")
+print(df.info())
+
+print("\n===== Missing Values =====")
+print(df.isnull().sum())
+
+print("\n===== Summary Statistics (numerical only) =====")
+print(df.describe())
+
+# =============================================
+# 2. EDA - Visualizations
+# =============================================
+
+# Count plot of 'Domain'
+plt.figure(figsize=(10,6))
+sns.countplot(data=df, x="Domain")
+plt.xticks(rotation=45)
+plt.title("Count of Survey Entries per Domain")
+plt.show()
+
+# Distribution of 'Value'
+plt.figure(figsize=(10,6))
+sns.histplot(df["Value"], kde=True, bins=20)
+plt.title("Distribution of 'Value'")
+plt.xlabel("Value (%)")
+plt.show()
+
+# =============================================
+# 3. PREPROCESSING
+# =============================================
+
+# Drop rows with missing 'Value' because it is numeric and essential
+df = df.dropna(subset=["Value"])
+
+# Drop rows with missing 'Value' because it is numeric and essential
+# CLEAN THE "Value" COLUMN
+df["Value"] = df["Value"].replace("***", pd.NA)
+df["Value"] = pd.to_numeric(df["Value"], errors="coerce")
+df = df.dropna(subset=["Value"])
+
+# Identify categorical & numerical columns
+categorical_cols = ["Group", "Education Level", "Year", "Domain", "Indicator"]
+numeric_cols = ["Value"]
+
+# One-hot encoding for categoricals
+ohe = OneHotEncoder(handle_unknown="ignore")
+
+# Standard scaler for numeric values
+scaler = StandardScaler()
+
+preprocessor = ColumnTransformer(
+    transformers=[
+        ("cat", ohe, categorical_cols),
+        ("num", scaler, numeric_cols)
+    ]
 )
 
-test_df = pd.read_csv(
-   os.path.join(os.getcwd(), "Students drugs Addiction Dataset", "Student_Drugs_Addiction_Training_ Dataset", "student_addiction_dataset_train.csv")
+df_processed = preprocessor.fit_transform(df)
+
+print("\n===== Shape after preprocessing =====")
+print(df_processed.shape)
+
+# =============================================
+# Save processed dataset (optional)
+# =============================================
+import numpy as np
+df_processed = pd.DataFrame(
+    df_processed.toarray() if hasattr(df_processed, "toarray") else df_processed
 )
+df_processed.to_csv("processed_dataset.csv", index=False)
 
+print("\nProcessed dataset saved as 'processed_dataset.csv'")
 
-# Data Preprocessing
-train_df = train_df.dropna()
-test_df = test_df.dropna()
-
-train_df["__is_train__"] = 1
-test_df["__is_train__"] = 0
-
-full_df = pd.concat([train_df, test_df], ignore_index=True)
-
-categorical_cols = full_df.select_dtypes(include="object").columns
-
-for col in categorical_cols:
-    if col == "__is_train__":
-        continue
-    le = LabelEncoder()
-    full_df[col] = le.fit_transform(full_df[col])
-
-train_df = full_df[full_df["__is_train__"] == 1].drop(columns="__is_train__")
-test_df = full_df[full_df["__is_train__"] == 0].drop(columns="__is_train__")
-
-print(train_df)
-print(test_df)
-
-# Chi-2 (X²) Feature Selection
-from scipy.stats import chi2_contingency
-
-target_col = "Addiction_Class"
-
-# Run Chi-2 test for each feature against the target
-chi2_results = []
-
-for col in train_df.columns:
-    if col == target_col:
-        continue
-    contingency_table = pd.crosstab(train_df[col], train_df[target_col])
-    chi2, p, dof, expected = chi2_contingency(contingency_table)
-    chi2_results.append([col, chi2, p])
-
-chi2_df = pd.DataFrame(chi2_results, columns=["Feature", "Chi2", "p-value"])
-chi2_df = chi2_df.sort_values(by="Chi2", ascending=False)
-print(chi2_df)
-print("\n")
-
-# KNN Classifier 
-X_train = train_df.drop(columns=["Addiction_Class"])
-y_train = train_df["Addiction_Class"]
-
-X_test = test_df.drop(columns=["Addiction_Class"])
-y_test = test_df["Addiction_Class"]
-
-knn = KNeighborsClassifier()
-knn.fit(X_train, y_train)
-
-y_pred = knn.predict(X_test)
-
-results_df_KNN = pd.DataFrame({
-    "Accuracy": [accuracy_score(y_test, y_pred)],
-    "Precision": [precision_score(y_test, y_pred, average='weighted', zero_division=0)],
-    "Recall": [recall_score(y_test, y_pred, average='weighted')],
-    "F1": [f1_score(y_test, y_pred, average='weighted')]
-})
-results_df_KNN.index = ["KNeighborsClassifier"]
-
-print(results_df_KNN)
-
-
-# Correlation Analysis
-corr_matrix = train_df.corr()
-
+from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN
+from sklearn.metrics import silhouette_score
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
 import seaborn as sns
 
-plt.figure(figsize=(12,10))
-sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap="coolwarm")
-plt.title("Correlation Matrix")
+# =============================================
+# K-MEANS CLUSTERING
+# =============================================
+
+print("\n===== K-Means Clustering =====")
+
+kmeans = KMeans(n_clusters=4, random_state=42)
+kmeans_labels = kmeans.fit_predict(df_processed)
+
+kmeans_inertia = kmeans.inertia_
+kmeans_silhouette = silhouette_score(df_processed, kmeans_labels)
+
+print("Inertia:", kmeans_inertia)
+print("Silhouette Score:", kmeans_silhouette)
+
+pca = PCA(n_components=2)
+reduced = pca.fit_transform(df_processed)
+
+plt.figure(figsize=(8,6))
+sns.scatterplot(
+    x=reduced[:,0],
+    y=reduced[:,1],
+    hue=kmeans_labels,
+    palette="tab10"
+)
+plt.title("K-Means Clusters (PCA Projection)")
+plt.show()
+
+# =============================================
+# Agglomerative Clustering
+# =============================================
+
+print("\n===== Agglomerative Clustering =====")
+
+agg = AgglomerativeClustering(n_clusters=4)
+agg_labels = agg.fit_predict(df_processed)
+
+agg_silhouette = silhouette_score(df_processed, agg_labels)
+
+print("Silhouette Score:", agg_silhouette)
+
+plt.figure(figsize=(8,6))
+sns.scatterplot(
+    x=reduced[:,0],
+    y=reduced[:,1],
+    hue=agg_labels,
+    palette="tab10"
+)
+plt.title("Agglomerative Clusters (PCA Projection)")
+plt.show()
+
+# =============================================
+# DBSCAN Clustering
+# =============================================
+
+print("\n===== DBSCAN Clustering =====")
+
+dbscan = DBSCAN(eps=0.5, min_samples=10)
+dbscan_labels = dbscan.fit_predict(df_processed)
+
+# DBSCAN often produces -1 (noise), so check if enough clusters exist
+unique_labels = len(set(dbscan_labels)) - (1 if -1 in dbscan_labels else 0)
+
+print("Number of clusters found:", unique_labels)
+
+if unique_labels > 1:
+    dbscan_silhouette = silhouette_score(df_processed, dbscan_labels)
+    print("Silhouette Score:", dbscan_silhouette)
+else:
+    print("Silhouette Score: Not applicable (DBSCAN found too few clusters)")
+
+plt.figure(figsize=(8,6))
+sns.scatterplot(
+    x=reduced[:,0],
+    y=reduced[:,1],
+    hue=dbscan_labels,
+    palette="tab10"
+)
+plt.title("DBSCAN Clusters (PCA Projection)")
 plt.show()
