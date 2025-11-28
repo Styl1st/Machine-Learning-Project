@@ -1,49 +1,60 @@
-Student Addiction Prediction
+Student Addiction Analysis
 
-This project predicts a student's addiction level using machine learning.
+This project analyzes and predicts student addiction levels using machine learning and clustering.
 
-📌 What the project does :
+Features :
 
-  - Loads a dataset of student behaviors (Yes/No features)
+  -- Loads and preprocesses the dataset
 
-  - Preprocesses the data (cleaning + encoding)
+  -- Trains a KNN classifier
 
-  - Performs basic data analysis
+  -- Shows accuracy, precision, recall, and F1-score
 
-  - Trains a KNN classifier
+  -- Generates a correlation heatmap
 
-  - Shows model accuracy, precision, recall, and F1-score
+Applies clustering:
 
-  - Displays a correlation heatmap
+  --> K-Means
 
-📂 Files
+  --> Agglomerative Clustering
 
---> main.py → main code
+  --> DBSCAN
 
---> student_addiction_dataset_train.csv
+  --> Displays PCA-based cluster visualizations
 
---> student_addiction_dataset_test.csv
+  --> Creates a results table for all clustering models
 
-README.md
+Files :
 
-▶️ How to run
+  - main.py – main script
 
-Install requirements:
+  - preprocessing.py – data cleaning and encoding
 
-  -- pip install pandas scikit-learn matplotlib seaborn -- 
+  - mergingCSVs.py – dataset merging
 
-📊 Dataset
+  - processed_dataset.csv – cleaned dataset
 
--- Contains Yes/No features such as:
+  - combined_survey_data.csv – raw merged dataset
 
--- Experimentation
+  - README.md
 
--- Social Isolation
+How to Run
 
--- Academic Decline
+Install dependencies:
 
--- ... etc
+  ## pip install pandas scikit-learn matplotlib seaborn
 
-🤖 Model
 
-Uses K-Nearest Neighbors (KNN) to classify addiction levels.
+Run the project:
+
+  ## python main.py
+
+Models:
+
+  ~~ KNN classification
+
+  ~~ K-Means clustering
+
+  ~~ Agglomerative clustering
+
+  ~~ DBSCAN clustering
